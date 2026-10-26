@@ -1,0 +1,20 @@
+TechNova Expenses and Procurement
+FICTIONAL LEARNING POLICY. Amounts and deadlines below are invented company rules for this demo.
+
+Expense submission
+Submit a business expense claim through the employee portal within 30 calendar days of the expense. Attach the itemized receipt and describe the business purpose. The reporting manager reviews the claim.
+
+Reimbursement processing
+Finance processes approved claims in the next monthly reimbursement cycle. This policy does not provide a payment date or live claim status. Contact finance@example.invalid for the status of a specific claim.
+
+Travel booking
+Obtain the reporting manager's written approval before booking work travel. Keep the approval and receipts with the expense claim. This document defines no hotel, meal or airfare reimbursement limits.
+
+Equipment purchases
+Request equipment through IT before purchasing it yourself. IT checks compatibility and the available inventory. Manager approval is required before a purchase request is sent to Finance.
+
+Procurement threshold
+A single purchase of INR 25000 or more requires Finance approval in addition to manager approval. Purchases below INR 25000 still require manager approval. Do not split purchases to avoid approval.
+
+Supplier payments
+Only Finance authorizes supplier payments after the required approvals and invoice checks. CompanyMind cannot submit a claim, approve a purchase or transfer money.

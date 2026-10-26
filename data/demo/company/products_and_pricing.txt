@@ -1,0 +1,20 @@
+TechNova Product Guide and Demo Pricing
+FICTIONAL LEARNING DATA. All product names, features and prices below are illustrative, not commercial offers.
+
+TechDesk
+TechDesk is TechNova's employee support platform. Staff submit HR or IT requests, follow ticket status and search support articles. It is a fictional product, separate from CompanyMind.
+
+TechDesk Starter pricing
+In this demo, TechDesk Starter costs INR 199 per employee per month, excluding taxes. Starter includes ticket submission, assignment and a searchable support knowledge base.
+
+TechDesk Growth pricing
+In this demo, TechDesk Growth costs INR 349 per employee per month, excluding taxes. Growth adds approval workflows, service-level tracking and reporting to the Starter features.
+
+FlowOps
+FlowOps is TechNova's fictional approval workflow product for expenses, procurement and access requests. Its illustrative price is INR 4900 per workspace per month, excluding taxes.
+
+CompanyMind
+CompanyMind is the internal company knowledge assistant in this learning project. Employees ask questions and receive answers with document references. Access rules protect private employee documents. No CompanyMind sales price is defined.
+
+Trials and sales
+TechDesk and FlowOps have a fictional 30-day trial. Product questions and pricing clarification go to sales@example.invalid. Contact addresses in this library do not receive email.

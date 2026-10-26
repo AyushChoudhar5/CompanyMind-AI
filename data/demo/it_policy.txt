@@ -1,0 +1,14 @@
+TechNova IT and Onboarding Guide
+FICTIONAL DEMONSTRATION DOCUMENT. Contact addresses are non-operational examples.
+
+Onboarding
+HR creates the employee profile. IT issues a company laptop and company email.
+Complete security awareness training in the first working week.
+
+VPN troubleshooting
+Check your internet connection and restart the VPN client. Reauthenticate using
+your company account. If access still fails, contact it@example.invalid.
+
+Account security
+Do not share passwords or authentication codes. Report a lost laptop to IT.
+Only use approved systems for employee documents.

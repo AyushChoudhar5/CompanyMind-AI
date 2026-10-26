@@ -1,0 +1,1 @@
+"""CompanyMind backend tests package."""

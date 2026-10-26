@@ -1,0 +1,19 @@
+.env
+.venv/
+__pycache__/.env
+venv/
+.venv/
+__pycache__/
+chroma_db/
+node_modules/
+dist/
+.pytest_cache/
+# Local identities, sessions and real employee files
+runtime/
+data/private/
+*.log
+
+# Uploaded employee source files and document-operation locks
+data/uploads/
+data/catalog.json.lock
+data/.catalog-*.tmp

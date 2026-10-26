@@ -1,0 +1,11 @@
+TechNova HR Review Guide
+FICTIONAL LEARNING DATA. Upload this sample with the HR only audience.
+
+Internal review checklist
+Before publishing an employee document, HR verifies the employee ID, document version and intended audience. Personal agreements should be assigned to one employee, not shared with everyone.
+
+Demo review label
+Use the fictional review label HR-DEMO-42 in this training exercise. It is not a real credential or company process.
+
+Publishing employee guidance
+Prepare a separate employee-facing summary when guidance is intended for all employees. Keep internal HR notes in the HR-only audience.

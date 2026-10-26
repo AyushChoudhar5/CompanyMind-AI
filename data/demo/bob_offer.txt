@@ -1,0 +1,12 @@
+FICTIONAL OFFER LETTER: Bob Example, employee EMP002
+This invented example is only for testing access controls and document retrieval.
+
+Role and compensation
+Role: QA Engineer. Annual fixed compensation: INR 720,000.
+
+Employment terms
+Probation: 3 months. This offer letter states a notice period of 90 calendar days
+after confirmation. Ask HR to clarify any difference from the general policy.
+
+Training
+No training agreement is included in Bob's demonstration document set.

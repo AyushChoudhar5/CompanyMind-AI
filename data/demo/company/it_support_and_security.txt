@@ -1,0 +1,20 @@
+TechNova IT Support and Security
+FICTIONAL LEARNING POLICY. All contact addresses are non-operational examples.
+
+VPN troubleshooting
+If the company VPN will not connect, check the internet connection, restart the VPN client and reauthenticate with the company account. If it still fails, contact it@example.invalid.
+
+Password and account help
+Contact it@example.invalid if a company account is locked. Use the approved password-reset process. Never send passwords, recovery codes or authentication codes to CompanyMind or another person.
+
+Lost device or suspicious access
+Report a lost laptop, unexpected login or suspected compromised account to it@example.invalid immediately. Include the device or account affected and when the incident was noticed. Never include a password or code.
+
+Software access requests
+Ask the reporting manager to approve the business need for a new tool. IT checks the approved software list and provisions access after approval. CompanyMind explains the process but cannot grant access.
+
+Security training
+Complete security awareness training in the first working week. Use approved systems for employee documents and do not copy confidential company data into unapproved public tools.
+
+Support coverage
+Routine IT support coverage in this fictional demo is Monday to Friday, 09:00 to 18:00 India Standard Time, excluding company holidays. No response-time guarantee or 24-hour incident service is defined.

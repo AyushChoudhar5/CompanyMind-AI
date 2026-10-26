@@ -1,0 +1,22 @@
+TechNova Leave Policy
+Document ID: HR-001
+Version: 1.0
+
+This is a fictional company policy for a learning project.
+
+Casual Leave
+Full-time employees receive 12 days of casual leave per calendar year.
+Employees should request casual leave at least 2 working days in advance.
+Unused casual leave does not carry forward to the next year.
+
+Sick Leave
+Full-time employees receive 10 days of sick leave per calendar year.
+A medical certificate is required for more than 2 consecutive sick days.
+
+Annual Leave
+Full-time employees receive 18 days of annual leave per calendar year.
+Up to 5 unused annual leave days may carry forward to the next year.
+
+Approval
+All leave requests must be submitted through the employee portal.
+The employee's reporting manager approves or rejects the request.

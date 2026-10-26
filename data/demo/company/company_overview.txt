@@ -1,0 +1,20 @@
+TechNova Company Overview
+FICTIONAL LEARNING DATA. TechNova, its staff, products and prices in this library are invented for CompanyMind demonstrations.
+
+Business
+TechNova builds workplace software that helps small and mid-sized businesses manage employee support requests, internal approvals and company knowledge.
+
+History and offices
+TechNova was founded in 2021. Its headquarters is in Bengaluru, India, and it has a second office in Pune, India. These are fictional locations for this demo.
+
+Mission
+TechNova's mission is to make everyday work easier by connecting employees with clear information and dependable internal tools.
+
+Customers
+The fictional target customers are growing businesses with 50 to 1000 employees. TechNova serves teams such as HR, IT, operations and customer support.
+
+Leadership
+Aarav Mehta is the fictional founder and CEO. Kavya Rao is the fictional CTO. Meera Shah is the fictional Head of People. These names are invented sample data.
+
+Values
+TechNova values clear communication, customer usefulness, responsible data handling and practical learning. Employees should ask the relevant team when a policy is unclear.

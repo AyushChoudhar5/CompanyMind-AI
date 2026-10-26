@@ -1,0 +1,13 @@
+FICTIONAL OFFER LETTER: Alice Example, employee EMP001
+This invented example is only for testing access controls and document retrieval.
+
+Role and compensation
+Role: Junior Software Engineer. Annual fixed compensation: INR 600,000.
+
+Employment terms
+Probation: 6 months. This offer letter states a notice period of 30 calendar days
+after confirmation. This differs from the general employment policy; ask HR to
+clarify which term applies rather than assuming a rule of precedence.
+
+Training
+A separate training agreement records Alice's training commitment.

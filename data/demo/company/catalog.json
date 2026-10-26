@@ -1,0 +1,65 @@
+[
+  {
+    "document_id": "company-demo-company-overview",
+    "path": "demo/company/company_overview.txt",
+    "title": "Company overview (fictional)",
+    "category": "company",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "07f18120a2cc3e36c32286a602da3132b75efcf5c66aca38363644500cc10b4c"
+  },
+  {
+    "document_id": "company-demo-products-and-pricing",
+    "path": "demo/company/products_and_pricing.txt",
+    "title": "Products and demo pricing (fictional)",
+    "category": "products",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "511ef57bc5f15e7adc4863292ba4603a01e66663abb222d54bd01923dd46eaca"
+  },
+  {
+    "document_id": "company-demo-teams-and-contacts",
+    "path": "demo/company/teams_and_contacts.txt",
+    "title": "Teams and contacts (fictional)",
+    "category": "teams",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "2d01bb89560c5a8608a1f1ecb8a13ebbcefd04ce88273a998c7ce581801a476d"
+  },
+  {
+    "document_id": "company-demo-remote-work-policy",
+    "path": "demo/company/remote_work_policy.txt",
+    "title": "Remote working policy (fictional)",
+    "category": "remote_work",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "bc2cec3fdaf0266585d5450305b17ad3b0624aea9d5fe221eccbd65637a11728"
+  },
+  {
+    "document_id": "company-demo-it-support-and-security",
+    "path": "demo/company/it_support_and_security.txt",
+    "title": "IT support and security (fictional)",
+    "category": "it",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "2c548c3b5b5d176ef8388284628b84af566ec10a8b4efaec96ff703a5190781b"
+  },
+  {
+    "document_id": "company-demo-expenses-and-procurement",
+    "path": "demo/company/expenses_and_procurement.txt",
+    "title": "Expenses and procurement (fictional)",
+    "category": "finance",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "1bd8cef31aa713684a0bb0be68041f5d7e14ac5ebd786d0d5bd1f03a6f3de841"
+  },
+  {
+    "document_id": "company-demo-onboarding-and-benefits",
+    "path": "demo/company/onboarding_and_benefits.txt",
+    "title": "Onboarding and benefits (fictional)",
+    "category": "benefits",
+    "version": "1.0",
+    "visibility": "company",
+    "sha256": "3823969c3ebf9165e91df43006ae574dc8e6e0f1b67d68e2ef623c6426a92007"
+  }
+]

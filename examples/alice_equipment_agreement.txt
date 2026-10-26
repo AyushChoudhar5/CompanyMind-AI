@@ -1,0 +1,9 @@
+Alice Example Equipment Agreement — FICTIONAL TEST DOCUMENT
+Employee ID: EMP001. This is invented learning-project data.
+
+Assigned equipment
+Alice has been assigned a company laptop with demonstration asset ID DEMO-ALICE-01.
+
+Return terms
+The agreement asks Alice to return the laptop within 7 calendar days of her last
+working day. Contact HR to arrange collection and clarify any individual circumstances.

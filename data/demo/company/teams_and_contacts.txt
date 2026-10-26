@@ -1,0 +1,20 @@
+TechNova Teams and Contacts
+FICTIONAL LEARNING DATA. All names and example.invalid addresses below are non-operational sample contacts.
+
+People team
+The People team owns onboarding, benefits and employment policy questions. Meera Shah is its fictional lead. Contact hr@example.invalid for questions about offer letters, agreements, probation or conflicting employment terms.
+
+IT support team
+The IT support team manages laptops, company accounts, VPN access and technical incidents. Contact it@example.invalid for IT help. Report a lost laptop or suspected compromised account immediately.
+
+Engineering team
+The Engineering team builds and maintains TechNova's products. Kavya Rao is the fictional CTO. Contact engineering@example.invalid for product engineering coordination, not for personal account support.
+
+Finance team
+The Finance team handles approved expense reimbursements and supplier payments. Contact finance@example.invalid for reimbursement status. Managers approve business expenses before Finance processes them.
+
+Sales and customer support
+Contact sales@example.invalid for product demos and fictional pricing. Contact support@example.invalid for TechDesk or FlowOps customer issues. Internal employee IT issues go to it@example.invalid.
+
+Manager responsibilities
+An employee's reporting manager approves leave requests and work arrangements. HR handles unresolved employment policy interpretation. CompanyMind can explain documents but does not send messages or approve requests.
