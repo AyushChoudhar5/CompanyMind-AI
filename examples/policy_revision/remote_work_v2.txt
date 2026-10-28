@@ -1,0 +1,5 @@
+Fictional revision demo: remote work
+Version 2.0
+
+Employees may work remotely one day per week.
+The employee reporting manager must approve remote work.

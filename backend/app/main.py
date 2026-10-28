@@ -6,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from dataclasses import asdict
 from backend.app.core.access import Employee
 from backend.app.documents.library import router as library_router
+from backend.app.documents.revisions import RevisionService, router as revision_router
 from backend.app.core.conversations import ConversationError, ConversationStore, session_owner
 from backend.app.documents.admin import DocumentManager, UploadBodyLimit, router as document_router
 from backend.app.core.auth import IdentityStore, SESSION_SECONDS, bearer, current_employee
@@ -28,6 +29,7 @@ from backend.app.rag.generation import create_llm_client, generate_answer, rephr
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.conversations = ConversationStore()
+    app.state.revisions = RevisionService()
     app.state.vector_store = get_vector_store()
     app.state.llm_client = create_llm_client()
     app.state.identities = IdentityStore()
@@ -36,12 +38,13 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        app.state.revisions.close()
         app.state.llm_client.close()
         app.state.vector_store = None
 
 app = FastAPI(
     title="CompanyMind AI API",
-    version="0.5.0",
+    version="0.6.0",
     lifespan=lifespan,
 )
 
@@ -57,6 +60,7 @@ async def private_response_headers(request, call_next):
 app.add_middleware(UploadBodyLimit)
 app.include_router(document_router)
 app.include_router(library_router)
+app.include_router(revision_router)
 
 
 class SearchRequest(BaseModel):

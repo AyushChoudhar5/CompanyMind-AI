@@ -3,6 +3,8 @@ from collections import Counter
 import hashlib
 import json
 import logging
+import re
+from backend.app.core import publication as pub
 from pathlib import Path, PureWindowsPath
 import uuid
 
@@ -39,7 +41,9 @@ class UploadBodyLimit:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"].rstrip("/") != "/admin/documents":
+        path = scope.get("path", "").rstrip("/")
+        upload_route = path == "/admin/documents" or re.fullmatch(r"/admin/documents/[^/]+/revisions", path)
+        if scope["type"] != "http" or scope["method"] != "POST" or not upload_route:
             return await self.app(scope, receive, send)
         headers = dict(scope["headers"])
 
@@ -125,9 +129,11 @@ class DocumentManager:
             "version": spec.version, "source": spec.source_name or Path(spec.path).name,
             "visibility": spec.visibility, "owner_id": spec.owner_id,
             "owner_username": owners.get(spec.owner_id), "chunks": counts[spec.document_id],
+            "status": pub.status(spec), "replaces_id": spec.replaces_id,
+            "effective_from": spec.effective_from, "effective_until": spec.effective_until,
         } for spec in specs]
 
-    def upload(self, file: UploadFile, details: UploadDetails):
+    def upload(self, file: UploadFile, details: UploadDetails, *, revision_of=None, actor_id=None):
         filename = PureWindowsPath(file.filename or "").name.strip()
         extension = Path(filename).suffix.lower()
         if extension not in {".txt", ".pdf"} or len(filename) > 250 or any(ord(char) < 32 for char in filename):
@@ -136,7 +142,10 @@ class DocumentManager:
         # A client filename is display metadata, never a filesystem destination.
         relative = f"uploads/{document_id}{extension}"
         try:
-            spec = DocumentSpec(document_id=document_id, path=relative, source_name=filename, **details.model_dump())
+            spec = DocumentSpec(document_id=document_id, path=relative, source_name=filename,
+                                lifecycle="draft" if revision_of else "published",
+                                replaces_id=revision_of.document_id if revision_of else None,
+                                created_by=actor_id, created_at=pub.now_epoch(), **details.model_dump())
         except ValidationError as error:
             raise HTTPException(422, str(error.errors()[0]["msg"])) from None
         if spec.visibility == "employee" and not self.identities.user_exists(spec.owner_id):
@@ -179,6 +188,14 @@ class DocumentManager:
             load_catalog(self.catalog_path)  # Initialize a live registry outside its operation lock.
             with self.lock():
                 specs = load_catalog(self.catalog_path)
+                if revision_of:
+                    base = next((item for item in specs if item.document_id == revision_of.document_id), None)
+                    if base is None or base.model_dump() != revision_of.model_dump() or pub.status(base) != "published" or base.effective_until != pub.END_OF_TIME:
+                        raise HTTPException(409, "The current policy changed or already has a scheduled revision. Refresh the document list.")
+                    if spec.version.casefold() == base.version.casefold():
+                        raise HTTPException(422, "Give the revision a different version label.")
+                    if (spec.visibility, spec.owner_id) != (base.visibility, base.owner_id):
+                        raise HTTPException(422, "The revision must keep the original audience.")
                 if any(old.sha256 == spec.sha256 and old.visibility == spec.visibility
                        and old.owner_id == spec.owner_id and old.title == spec.title
                        and old.version == spec.version for old in specs):
@@ -196,7 +213,7 @@ class DocumentManager:
                 complete = True
             return {"document_id": document_id, "title": spec.title, "source": filename,
                     "version": spec.version, "visibility": spec.visibility,
-                    "owner_id": spec.owner_id, "chunks": len(chunks)}
+                    "owner_id": spec.owner_id, "chunks": len(chunks), "status": pub.status(spec), "replaces_id": spec.replaces_id}
         except HTTPException:
             raise
         except Timeout:
@@ -230,6 +247,8 @@ class DocumentManager:
                 spec = next((item for item in specs if item.document_id == document_id), None)
                 if spec is None:
                     raise HTTPException(404, "Document not found.")
+                if any(item.replaces_id == document_id for item in specs) or (spec.replaces_id and spec.lifecycle == "published"):
+                    raise HTTPException(409, "This document belongs to policy version history. Keep it for review records; publish a new revision to replace the current version.")
                 # Keep source files, including the original demos, for recovery.
                 # Removing the catalog entry prevents a later CLI reindex revival.
                 records = self.store.get(where={"document_id": document_id}, include=["metadatas"])

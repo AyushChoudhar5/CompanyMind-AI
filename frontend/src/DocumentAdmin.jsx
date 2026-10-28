@@ -1,6 +1,9 @@
+import PolicyRevisions from './PolicyRevisions'
 import { useEffect, useState } from 'react'
 
 export default function DocumentAdmin({ session, onBack, onSignOut }) {
+  const [revisionDocument, setRevisionDocument] = useState(null)
+  const [libraryStatus, setLibraryStatus] = useState('all')
   const [documents, setDocuments] = useState([])
   const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
@@ -95,9 +98,11 @@ export default function DocumentAdmin({ session, onBack, onSignOut }) {
   }
 
   const shownDocuments = documents.filter(document => (libraryAudience === 'all' || document.visibility === libraryAudience)
+    && (libraryStatus === 'all' || (document.status || 'published') === libraryStatus)
     && [document.title, document.source, document.owner_username, document.owner_id, document.category]
       .some(value => (value || '').toLowerCase().includes(librarySearch.toLowerCase().trim())))
   const selectedOwner = employees.find(employee => employee.user_id === owner)
+  if (revisionDocument) return <PolicyRevisions session={session} document={revisionDocument} onSignOut={onSignOut} onBack={() => { setRevisionDocument(null); refresh().catch(failure => setError(failure.message)) }} />
   return <main className="document-admin">
     <header className="admin-topbar">
       <button className="admin-back" onClick={onBack} disabled={busy}>← Back to questions</button>
@@ -134,15 +139,17 @@ export default function DocumentAdmin({ session, onBack, onSignOut }) {
         </section>
         <section className="admin-library" aria-labelledby="library-heading">
           <div className="admin-library-heading"><h2 id="library-heading">Registered documents <span>{documents.length}</span></h2><button disabled={busy || loading} onClick={() => { setLoading(true); refresh().catch(failure => setError(failure.message)).finally(() => setLoading(false)) }}>Refresh</button></div>
-          <p>New version uploads are separate documents. Remove an obsolete version after verifying its replacement.</p>
+          <p>Use Review policy revision to replace a policy with an approved version. Drafts remain hidden from employee search.</p>
           <div className="library-toolbar admin-filters">
             <div className="library-control"><label htmlFor="admin-library-search">Find a document</label><input id="admin-library-search" type="search" placeholder="Title, employee, ID or category" value={librarySearch} onChange={event => setLibrarySearch(event.target.value)} maxLength={200} /></div>
             <div className="library-control"><label htmlFor="admin-library-audience">Audience</label><select id="admin-library-audience" value={libraryAudience} onChange={event => setLibraryAudience(event.target.value)}><option value="all">All audiences</option><option value="company">All employees</option><option value="employee">One employee + HR</option><option value="hr">HR only</option></select></div>
+            <div className="library-control"><label htmlFor="admin-status">Publication status</label><select id="admin-status" value={libraryStatus} onChange={event => setLibraryStatus(event.target.value)}>{['all', 'published', 'draft', 'scheduled', 'archived'].map(value => <option key={value} value={value}>{value === 'all' ? 'All versions' : value}</option>)}</select></div>
           </div>
           {loading ? <p className="admin-loading">Loading your library…</p> : shownDocuments.length === 0 ? <p className="admin-loading">No documents match this view.</p> : <div className="admin-document-list">{shownDocuments.map(document => <article className="admin-document" key={document.document_id}>
             <div className="admin-document-heading"><h3>{document.title}</h3><span className={'audience-badge ' + (document.visibility !== 'company' ? 'private' : '')}>{document.visibility === 'hr' ? 'HR only' : document.visibility === 'company' ? 'Shared' : 'Private'}</span></div>
             <p>{document.source} · v{document.version}</p>
-            <div className="admin-document-details"><span>{document.visibility === 'hr' ? 'HR administrators only' : document.visibility === 'company' ? 'All employees' : (document.owner_username || document.owner_id) + ' + HR'}</span><span>{document.chunks > 0 ? 'Search-ready' : 'Not indexed'}</span></div>
+            <div className="admin-document-details"><span>{document.visibility === 'hr' ? 'HR administrators only' : document.visibility === 'company' ? 'All employees' : (document.owner_username || document.owner_id) + ' + HR'}</span><span>{document.chunks > 0 ? 'Indexed' : 'Not indexed'}</span></div>
+            <div className="revision-document-actions"><span className={'status-pill ' + document.status}>{document.status || 'published'}</span><button className="revision-link" onClick={() => setRevisionDocument({ ...document, review_existing: ['draft', 'scheduled', 'archived'].includes(document.status) })} disabled={busy}>{document.status === 'draft' ? 'Review draft' : document.status === 'scheduled' ? 'View scheduled revision' : document.status === 'archived' ? 'Version history' : 'Review policy revision'}</button></div>
             {deleteId === document.document_id ? <div className="delete-confirm"><p>Remove this document from the library and search? Its source file is kept locally for recovery.</p><button className="confirm-remove" onClick={() => remove(document)} disabled={busy}>Remove from search</button><button onClick={() => setDeleteId(null)} disabled={busy}>Cancel</button></div>
               : <button className="remove-document" onClick={() => setDeleteId(document.document_id)} disabled={busy}>Remove…</button>}
           </article>)}</div>}

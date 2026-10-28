@@ -78,8 +78,11 @@ repository README for the scope of automated and browser integration checks.
 ## Deployment
 
 Vite's proxy is for development and local preview. Production needs explicit
-routing to FastAPI and HTTPS. The typography uses Google Fonts with local font
-fallbacks when unavailable. The backend's Groq client uses the Windows system
+routing to FastAPI and HTTPS. The beige interface uses DM Sans through Google Fonts, with local system-font fallbacks. The backend's Groq client uses the Windows system
 certificate store through truststore without disabling HTTPS verification.
 
 For a backend on another port, set COMPANYMIND_API_TARGET in the Vite process environment. See docs/ACCESS_WORKSPACES.md for commands.
+
+## Policy revision review
+
+HR opens Manage documents > Review policy revision. PolicyRevisions.jsx provides draft upload, question selection, report polling, evidence, explicit approval and effective dates. Status filters distinguish drafts, scheduled, published and archived versions. See ../docs/POLICY_REVISIONS.md.

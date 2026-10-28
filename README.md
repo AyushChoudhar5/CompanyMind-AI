@@ -1,362 +1,348 @@
+<div align="center">
+
 # CompanyMind AI
 
-An employee knowledge assistant built with Python, LangChain components, local
-MiniLM embeddings, persistent Chroma, Groq, FastAPI, and React.
+### Company knowledge. Personal access. Answers with evidence.
 
-## Current milestone: employee and HR document workspaces
+A full-stack employee knowledge assistant with permission-aware RAG, private document access, and an HR workflow that previews how policy revisions could change employee answers.
 
-- Employee document library with permitted previews and document-specific questions.
-- Shared, individual employee, and HR-only document audiences enforced on the server.
-- HR document search by audience, title, category or employee.
-- Company overview, products, teams, IT, remote work and finance demo knowledge.
-- Session-scoped follow-up questions with fresh permission checks every turn.
-- Local employee sign-in with salted scrypt password hashes.
-- Expiring opaque bearer sessions; only token hashes are stored in SQLite.
-- Server-enforced access: employees see company documents and their own private
-  documents; an explicitly assigned HR administrator can also see confidential HR-only material.
-- The same access check protects search, chat, document listing, and CLI chat.
-- Metadata filters apply before retrieval. A second check blocks unexpected
-  unauthorized passages before generation or returning sources.
-- A registered catalog supports multiple TXT files and text-based PDFs.
-- Source references include document title, version, and real PDF page numbers.
-- Document selection narrows the search while preserving the permission filter.
-- The React UI supports sign-in, sign-out, document selection, and evidence.
-- HR-managed file uploads with shared, employee or HR-only audience and owner selection.
-- Staged uploads stay hidden until indexing and registration succeed.
-- HR can remove a document from search and the live catalog.
-- All included employment terms and employee names are fictional test data.
+**Python · FastAPI · React · LangChain · Chroma · Groq**
 
-This is a production-oriented learning prototype, not an approved deployment for
-real employee records. Chroma is local, but retrieved passages are sent to Groq.
-Use fictional/redacted documents until the company approves data processing.
+[Features](#features) · [Policy impact review](#policy-change-impact-review) · [Architecture](#architecture) · [Run locally](#run-locally) · [Demo](#a-five-minute-demo) · [Engineering notes](#engineering-notes)
 
-## First run after the upgrade
+</div>
 
-From PowerShell:
+---
+
+## Overview
+
+Company information is spread across handbooks, HR policies, IT guides, offer letters and employment agreements. Employees need a clear answer, the document behind it, and confidence that private records stay private.
+
+**CompanyMind brings those documents into one searchable assistant.** Employees ask questions in plain English and receive answers grounded in the passages they are allowed to access. HR can manage document audiences, upload replacements as drafts, compare answers across policy versions, and approve when a revision should take effect.
+
+The project is a **production-oriented portfolio prototype for a single company**. It demonstrates an end-to-end GenAI product with real API integration and tested access boundaries. It is not presented as a certified enterprise deployment or an autonomous HR decision-maker.
+
+![CompanyMind employee knowledge workspace](docs/images/companymind-workspace.png)
+
+*The application uses a beige and muted-green interface with clean, bold typography. Screenshots use isolated fictional demo accounts and documents.*
+
+## Features
+
+| Capability | What it does |
+|---|---|
+| **Document-grounded chat** | Retrieves relevant passages before generating an answer; the prompt instructs the model to acknowledge missing information. |
+| **Evidence and citations** | Answers link to numbered passages with document titles, version labels, filenames and PDF page numbers where available. |
+| **Employee-specific access** | Employees can search shared policies and their own assigned documents; another employee's private records are excluded. |
+| **HR workspace** | HR can inspect classified documents, upload files, assign audiences and owners, and manage policy revisions. |
+| **Document library** | Browse permitted documents, preview indexed passages and start a question scoped to a particular document. |
+| **Follow-up questions** | Resolve short follow-ups using recent question context, then retrieve fresh evidence with current permissions. |
+| **TXT and PDF ingestion** | Extract text, preserve source metadata, split into chunks, create local embeddings and store them in persistent Chroma. |
+| **Policy impact review** | Compare current and proposed answers for selected questions before a replacement policy is published. |
+| **Effective-date publication** | Publish immediately or schedule a revision; the old version stops supplying current answers at the cutover. |
+| **REST API** | FastAPI endpoints and interactive OpenAPI documentation expose authentication, chat, retrieval and document administration. |
+
+### Who can see what?
+
+| Document audience | Alice | Bob | HR administrator |
+|---|:---:|:---:|:---:|
+| Shared company policy | Yes | Yes | Yes |
+| Alice's private offer letter | Yes | No | Yes |
+| Bob's private agreement | No | Yes | Yes |
+| HR-only document | No | No | Yes |
+| Unpublished policy draft | No | No | Dedicated HR review screen only |
+
+Permissions are enforced **on the server before retrieval**, with a second check on returned passages before they reach the LLM. Hiding navigation buttons or asking the model to keep a secret is not the access-control mechanism.
+
+## Policy-change impact review
+
+The project's most distinctive workflow asks:
+
+> **Before HR publishes a revised policy, how would the answers to these employee questions change?**
+
+HR opens **Manage documents → Review policy revision**, uploads a replacement and runs 1–8 test questions. CompanyMind retrieves evidence separately from each version, generates paired answers and produces a review report.
+
+| Example question | Current policy | Proposed policy | Result |
+|---|---|---|---|
+| How many remote days are allowed each week? | Two days | One day | **Changed** |
+| Who approves remote work? | Reporting manager | Reporting manager | **Unchanged** |
+| Is remote work available during probation? | Available only after probation | Not stated | **Needs review** |
+
+![HR policy revision impact report](docs/images/policy-impact-review.png)
+
+*Illustrative report from the browser test environment. Deterministic test responses demonstrate the interface; live results depend on the supplied documents and model.*
+
+### What makes this more than a file replacement?
+
+- **Draft isolation:** proposed text is indexed for HR comparison but excluded from normal employee search and chat.
+- **Evidence on both sides:** current and proposed answers have separate references, so HR can inspect the basis for a change.
+- **Missing-information flags:** a missing supporting reference forces `Needs review`, rather than treating an omission as a confirmed new rule.
+- **Stale-review protection:** hashes of metadata and indexed content bind a report to the versions reviewed. Changed evidence requires a fresh review before publication.
+- **Explicit approval:** the latest completed report and HR acknowledgment are required to publish.
+- **Audience inheritance:** a revision keeps the original document's audience and employee owner.
+- **Time-based activation:** the old version's end time and replacement's start time share the same cutover.
+
+This is **AI-assisted review of selected questions**, not a guarantee that every affected answer or policy conflict has been discovered. It does not decide legal precedence, send employee notices, or replace formal HR approval.
+
+See the [policy revision walkthrough](docs/POLICY_REVISIONS.md), including fictional files you can upload yourself.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    User[Employee or HR administrator] --> UI[React + Vite web application]
+    UI --> API[FastAPI REST API]
+    API --> Auth[Session authentication]
+    Auth <--> Identity[(SQLite identities and session hashes)]
+    Auth --> Permissions[Role, owner and publication filters]
+    Permissions --> Retrieval[LangChain Chroma retrieval]
+    Retrieval <--> Vectors[(Persistent Chroma)]
+    Retrieval --> Check[Defensive passage permission check]
+    Check --> LLM[Groq LLM API]
+    LLM --> Answer[Answer + numbered sources]
+    Answer --> UI
+
+    API --> HR[HR document and revision services]
+    HR --> Files[(Source files and live JSON catalog)]
+    Files --> Extract[TXT / PDF text extraction]
+    Extract --> Split[Recursive text splitting]
+    Split --> Embed[Local MiniLM embeddings]
+    Embed --> Vectors
+    HR --> Reports[(Saved impact reports)]
+```
+
+### The RAG pipeline
+
+**Indexing:** document → extracted text → chunks with metadata → embeddings → Chroma.
+
+**Answering:** authenticated question → optional follow-up rewrite → permission-filtered semantic search → passage validation → LLM answer → citations.
+
+| Stage | Implementation |
+|---|---|
+| Text extraction | UTF-8 TXT and text-based PDFs through `pypdf`; PDF page metadata is retained. |
+| Chunking | LangChain `RecursiveCharacterTextSplitter`: **300 characters**, **50-character overlap**, start offsets retained. |
+| Embeddings | `sentence-transformers/all-MiniLM-L6-v2`, running locally on CPU with normalized embeddings. |
+| Vector storage | Persistent Chroma collection: `company_documents_v2`. |
+| Retrieval | Similarity search with server-derived audience, owner, staging and effective-date filters; optional document scope. |
+| Generation | Groq API using `openai/gpt-oss-20b`, with document-grounding and citation instructions. |
+| Conversation context | Bounded recent resolved questions; earlier assistant answers are not reused as factual evidence. |
+
+**LangChain's role:** document objects, text splitting, Hugging Face embedding integration and the Chroma adapter. Application services own authentication, policy lifecycle and orchestration; this is not a claim of a LangChain agent implementation.
+
+### Policy publication lifecycle
+
+```mermaid
+flowchart LR
+    Current[Current policy] --> Draft[Upload replacement as draft]
+    Draft --> Review[Compare selected questions]
+    Review --> Inspect[HR inspects answers and evidence]
+    Inspect --> Approve[Explicit approval]
+    Approve --> Now[Publish now]
+    Approve --> Later[Schedule effective date]
+    Now --> Active[Replacement supplies current answers]
+    Later --> Active
+    Active --> History[Previous version retained in HR history]
+```
+
+Scheduled activation uses `effective_from <= now < effective_until` during retrieval. It does not depend on a timer job firing at the right moment.
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python, FastAPI, Pydantic, Uvicorn |
+| Frontend | React, Vite, CSS |
+| RAG components | LangChain Core, Text Splitters, Hugging Face and Chroma integrations |
+| Embeddings | Sentence Transformers / MiniLM |
+| Vector database | Local persistent Chroma |
+| LLM provider | Groq |
+| Authentication storage | SQLite, salted scrypt password hashes, hashed opaque session tokens |
+| Document storage | Local files and a runtime JSON catalog |
+| Validation | pytest, real temporary Chroma integration tests, browser workflow checks, Oxlint and Vite build |
+
+## Run locally
+
+### Prerequisites
+
+- Python **3.10+**; the project has been exercised on Windows with Python 3.10.
+- Node.js **22.12+** and npm (the installed Vite version also supports Node 20.19+).
+- Git and a **Groq API key**. Model calls are subject to the provider account's quota and availability.
+- Internet access for the initial embedding-model download and LLM requests.
+
+Chroma and embeddings run locally. **Local storage does not mean fully offline inference:** retrieved passages are sent to Groq when generating answers or reviewing policies.
+
+### 1. Clone and install
+
+These commands use Windows PowerShell:
 
 ```powershell
-cd E:\companymind-ai
-.\venv\Scripts\Activate.ps1
+git clone https://github.com/AyushChoudhar5/CompanyMind-AI.git
+cd CompanyMind-AI
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r backend/requirements.txt
+```
+
+On macOS/Linux, activate the environment with `source .venv/bin/activate`. Dependency installation and document processing have primarily been validated on Windows.
+
+### 2. Configure the provider
+
+Create a `.env` file in the repository root:
+
+```dotenv
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Keep this file local. Provider credentials never belong in frontend code or a public `VITE_` variable.
+
+### 3. Create the fictional demo
+
+```powershell
 python -m backend.cli.manage setup-demo
 ```
 
-The setup command asks you to choose passwords of 12–128 characters for `alice`,
-`bob`, and `hr`. Password entry is intentionally hidden. It then indexes the 13
-registered sample documents (six original documents and seven company-library documents). Existing account IDs keep their existing passwords.
-Use different passwords for the three accounts. No default passwords are shipped.
+Choose passwords of **12–128 characters** for `alice`, `bob` and `hr`. Nothing appears while typing; no default passwords are shipped. Existing account IDs retain their passwords. A fresh setup indexes **13 fictional sample documents**, covering shared company knowledge and private employment records.
 
-Start the backend in that terminal (from E:\companymind-ai):
+### 4. Start the API
 
 ```powershell
 python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The original `python -m uvicorn api:app --reload` command also works from either
-`E:\companymind-ai` or `E:\companymind-ai\backend`. Both `api.py` files are small
-compatibility entry points; the actual application stays in `backend/app/main.py`.
+Interactive API documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-In a second terminal:
+### 5. Start the frontend in a second terminal
 
 ```powershell
-cd E:\companymind-ai\frontend
-npm install
-npm run dev
+cd CompanyMind-AI/frontend
+npm ci
+npm run dev -- --host 127.0.0.1
 ```
 
-Open http://localhost:5173 and sign in. API docs: http://127.0.0.1:8000/docs.
-For Swagger, call `/auth/login`, copy the access token, and paste it into the
-Authorize dialog. Sessions last one hour; refresh requires signing in again
-because browser credentials are only held in memory.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173) and sign in with a demo account. Adjust the `cd` path if your second terminal is already inside the repository.
 
-The existing `GROQ_API_KEY` stays in `.env`. Groq's HTTP client uses the Windows
-system certificate store through truststore, with certificate checking enabled.
-If port 8000 is occupied, check whether CompanyMind is already running before
-starting a second copy. The development frontend proxy targets port 8000.
+<details>
+<summary><strong>Port 8000 already in use?</strong></summary>
 
-The local Chroma collection browser is an administrator diagnostic tool and can
-read all indexed sample records. Employee permissions are enforced at the API
-boundary; employees must not have direct Chroma server or database-file access.
-The existing Open Chroma launcher now targets `company_documents_v2` after setup.
-
-## Company library and follow-up conversations
-
-For an existing installation, add only the new fictional shared library:
+Start the backend with `--port 8001`. Before starting Vite, set its backend target:
 
 ```powershell
-cd E:\companymind-ai
-python -m backend.cli.manage add-company-demo
+$env:COMPANYMIND_API_TARGET='http://127.0.0.1:8001'
+npm run dev -- --host 127.0.0.1
 ```
 
-The command preserves existing accounts and registered documents, including
-private uploads. Rerunning it skips complete matching entries. It does not reset
-the database or silently replace conflicting documents. Fresh setup-demo installs
-all 13 seed documents; existing catalogs are expanded only by the explicit command.
+The frontend and backend must agree on the port. A 404 at the API root `/` is not the same as a startup failure; use `/health` or `/docs`.
 
-Sign in, select All permitted documents, and try:
+</details>
 
-- What does TechNova do, and where is its headquarters?
-- What does TechDesk Growth cost?
-- What is the remote working policy?
-- Follow up: Does that apply during probation?
-- Who handles expense reimbursements?
+## A five-minute demo
 
-Each successful /chat response now includes a conversation_id. Pass it with the
-next /chat question to continue the topic. The server remembers up to four recent
-resolved user questions for that login session and exact document selection.
-Previous answers and source passages are not reused as factual evidence. A
-follow-up is rewritten into a standalone question, then searched and answered
-from currently permitted passages. A follow-up uses one additional LLM request;
-the configured provider's limits still apply.
+1. **Ask a shared-policy question.** Sign in as Alice and ask: “How many casual leave days do employees receive?” Open the citation and inspect the passage.
+2. **Check a missing answer.** Ask about something absent from the demo documents. Inspect whether the answer acknowledges the gap instead of inventing a policy.
+3. **Show the permission boundary.** Open Alice's document library, then sign in as Bob. Their assigned private documents differ; HR can inspect both through its role.
+4. **Continue a topic.** Ask about remote working, then “Does that apply during probation?” The system resolves the follow-up and performs a fresh permitted search.
+5. **Review a policy change.** As HR, upload `examples/policy_revision/remote_work_v1.txt` as a separate demo policy. Upload `remote_work_v2.txt` through **Review policy revision**, then run the questions in `questions.txt`.
+6. **Approve the replacement.** Inspect Changed / Unchanged / Needs review results and their passages, then publish or schedule the revision.
 
-New conversation or changing Search in starts a new topic. Recent sidebar entries
-can resume their own conversation until it expires. Resuming an older answer
-continues that conversation's latest topic rather than branching from that turn.
-DELETE /conversations/{conversation_id} discards an owned server conversation.
-Logout clears server memory for that session and the browser's question history.
+## API at a glance
 
-Topic memory expires after 30 minutes of inactivity and clears on backend restart.
-It is bounded to eight conversations per session and 256 in the server process;
-older idle topics may be evicted. This development implementation needs a shared
-conversation store before multiple API workers are used. It does not remember
-specific wording from earlier assistant answers. Ask a complete question if a
-reference is unclear. See docs/COMPANY_CHAT.md for an explanation and walkthrough.
+| Route | Purpose | Access |
+|---|---|---|
+| `GET /health` | Process health, not LLM-provider readiness | Public |
+| `POST /auth/login` | Exchange credentials for a bearer session | Public |
+| `GET /auth/me` · `POST /auth/logout` | Resolve identity / revoke session | Signed in |
+| `GET /documents` | List currently permitted documents | Signed in |
+| `GET /documents/{id}/preview` | Preview indexed passages | Permitted document |
+| `POST /search` · `POST /chat` | Retrieve evidence / generate an answer | Signed in |
+| `DELETE /conversations/{id}` | Discard an owned conversation | Owning session |
+| `GET /admin/employees` | List accounts for owner selection | HR |
+| `GET /admin/documents` · `POST /admin/documents` | List / upload documents | HR |
+| `DELETE /admin/documents/{id}` | Remove eligible documents from search and catalog | HR |
+| `GET /admin/documents/{id}/revisions` · `POST /admin/documents/{id}/revisions` | List / upload draft revisions | HR |
+| `GET /admin/revisions/{id}` | Revision details and latest report | HR |
+| `POST /admin/revisions/{id}/review` | Start an impact review | HR |
+| `POST /admin/revisions/{id}/publish` | Approve immediate or scheduled publication | HR |
 
-## Try the permission boundary
-
-1. As `alice`, select Alice's offer letter and ask the notice-period question.
-2. Search all permitted documents and compare the offer and general policy.
-3. Ask for Bob's salary. Bob's offer must not appear in Alice's document list,
-   retrieved sources, or the context sent to the LLM.
-4. Sign out, then sign in as `bob`. Alice's offer and training agreement must not
-   be available. The old question history should be gone.
-5. Sign in as `hr` to inspect the sample documents assigned to that role.
-
-Asking the LLM to hide a document is not authorization. The API derives identity
-from a validated session and constructs the Chroma filter itself. A client cannot
-choose a different employee ID or elevate its role in a question or request body.
-
-## Document administration
-
-`data/catalog.json` is the fictional seed registry. On first use it initializes
-`runtime/catalog.json`, the live registry used by HR uploads and indexing. The
-`runtime/` directory is ignored by Git so live titles and owner IDs stay out of
-the sample repository. Subsequent restarts do not reseed an existing live registry.
-The live registry is trusted operator-maintained configuration. Each entry defines
-an ID, path relative to `data/`, title, category, version, and visibility.
-Employee documents also need an owner ID from the identity database.
+Example authenticated `/chat` request body:
 
 ```json
 {
-  "document_id": "alice-offer",
-  "path": "demo/alice_offer.txt",
-  "title": "Alice's offer letter (fictional)",
-  "category": "offer_letter",
-  "version": "1.0",
-  "visibility": "employee",
-  "owner_id": "EMP001"
+  "question": "What is the remote working policy?",
+  "top_k": 3
 }
 ```
 
-Create an additional account with a password prompt:
+Send the token from `/auth/login` as `Authorization: Bearer <access_token>`. The response includes `answer`, `sources`, `truncated` and `conversation_id`. Pass that conversation ID with the next question to continue the topic. An optional `document_id` narrows retrieval; it never expands permissions.
 
-```powershell
-python -m backend.cli.manage create-user employee3 --id EMP003
-```
+## Engineering notes
 
-Only trusted local operators can assign the `--role hr_admin` option. There is no
-public registration or role-change endpoint. Demo IDs are EMP001 (alice), EMP002
-(bob), and HR001 (hr). They are not supplied by the frontend during retrieval.
+- **Session security:** passwords use salted scrypt hashes; SQLite stores hashes of opaque bearer tokens. Sessions expire after one hour. The browser keeps credentials in memory, and logout revokes the session.
+- **Layered access checks:** API identity is server-resolved. Retrieval applies metadata filters, then validates returned passages. Unknown roles and unclassified records are denied.
+- **Controlled ingestion:** uploads accept TXT or text-based PDF, up to 20 MiB and 1,000 chunks. Server-generated filenames, owner validation and staging metadata limit accidental exposure during ingestion.
+- **Fresh evidence for follow-ups:** memory retains up to four resolved questions, scoped to the session and document selection. It expires after 30 minutes of inactivity; it is not a cache of old answers used as truth.
+- **Review validity:** publication checks the latest completed report against both policy versions' content and metadata signatures.
+- **Failure handling:** catalog writes use file locking and atomic file replacement. Chroma and filesystem updates remain separate; rollback is best-effort, with reconciliation needed after some failures.
 
-After editing a registered document or its metadata:
+### Testing
 
-```powershell
-python -m backend.cli.manage index
-```
-
-Reindexing replaces chunks for each registered document, removing obsolete tail
-chunks. Replacement is synchronous and non-atomic: a failure may leave that
-document unavailable or partially indexed. For production, use staged immutable
-index versions and an atomic activation pointer. Unchanged documents are currently
-re-embedded; content-hash-based incremental indexing is a future improvement.
-
-Explicitly remove a retired document from the index:
-
-```powershell
-python -m backend.cli.manage delete-document alice-bond
-```
-
-The command removes the live catalog entry and indexed chunks together. The
-original source file is retained locally for recovery. The HR screen provides
-the same removal operation with a confirmation step. Manually removing a JSON
-entry alone still does not remove indexed records. For real employee files,
-use the ignored `data/private/` directory, subject to an approved data policy.
-Never mark an offer letter as `company` just to make a query work.
-
-The upgraded API reads `company_documents_v2`, excluding unclassified records in
-the original demonstration collection. The original `company_documents` data is
-preserved. It is not automatically migrated into an employee-accessible collection.
-
-PDF support uses text extraction, not OCR. A page with no extracted text causes a
-clear error rather than silently omitting part of a contract. Encrypted PDFs and
-files larger than 20 MiB are rejected. Tables and complex layouts still need
-extraction-quality review. TXT documents have no invented page numbers.
-
-## API
-
-| Route | Purpose | Sign-in |
-|---|---|---|
-| GET /health | Basic process health; not provider readiness | No |
-| POST /auth/login | Exchange username/password for a session | No |
-| GET /auth/me | Current server-resolved identity | Yes |
-| POST /auth/logout | Revoke the session | Yes |
-| GET /documents | List permitted indexed documents | Yes |
-| POST /search | Retrieve permitted passages | Yes |
-| POST /chat | Retrieve permitted passages and generate | Yes |
-| GET /admin/employees | List active accounts for owner selection | HR only |
-| GET /admin/documents | Inspect registered documents and index status | HR only |
-| POST /admin/documents | Upload and index a file | HR only |
-| DELETE /admin/documents/{id} | Remove from catalog and employee search | HR only |
-
-The search/chat body accepts `question`, `top_k` (1–10), and an optional
-`document_id`. A document ID narrows access; it never overrides the account's
-permissions. Unknown body fields such as `employee_id` are rejected.
-
-`backend/cli/chat.py` now acts as an authenticated terminal API client. Run the backend first.
-All local administration commands assume trusted filesystem access and should not
-be exposed through a public server. Development Vite proxies are not a production
-reverse proxy; deployment requires explicit routing and HTTPS.
-
-## Checks
+From the repository root:
 
 ```powershell
 python -m pip install -r backend/requirements-dev.txt
-python -m pytest -q
+python -m pytest -q backend/tests
 cd frontend
 npm run lint
 npm run build
 ```
 
-Tests use temporary identity databases and a real temporary Chroma collection
-with deterministic test embeddings. They do not send documents to Groq or measure
-real model answer quality. Coverage includes cross-employee isolation, document
-scope bypass attempts, denied unclassified records, token expiry/revocation,
-input validation, PDF page metadata, and document replacement.
+The current backend suite passes **154 tests**. Backend tests use temporary SQLite databases, **real temporary Chroma collections**, deterministic embeddings and mocked generation. They cover employee isolation, session handling, scope bypass attempts, upload validation, draft visibility, scheduled cutover, stale reports, publication failures and model-reference validation.
 
-## Next milestones
+The UI has also been exercised through local browser workflow checks using fictional accounts and a deterministic provider substitute. Those development checks are not currently packaged as a repository test runner. Separate live-provider smoke checks verified representative Changed / Unchanged / Needs review outputs; neither type of check is a quantitative RAG-quality benchmark.
 
-1. HR document approval, policy effective dates, durable ingestion jobs, OCR,
-   staged document versions, and document access grants finer than two roles.
-2. A labeled retrieval/answer evaluation set; measure recall, groundedness,
-   citation support, abstention, cost, and latency before tuning retrieval.
-3. Hybrid retrieval and reranking, conflict handling, and verified structured
-   fields for questions needing calculations or live HR-system data.
-4. A permission-controlled HR escalation workflow with confirmation and an audit
-   trail for actions that change external systems.
-5. Company SSO/OIDC, production database and storage, encryption/retention policy,
-   request quotas, audit events without document text, monitoring, and backups.
-6. CI, reproducible packaging, staging deployment, load tests, and operational
-   readiness review. Do not claim production security or scale from local tests.
-
-See [the learning guide](docs/LEARNING.md) for explanations and exercises, and
-[the folder guide](docs/PROJECT_STRUCTURE.md) for the code layout.
-
-
-## HR upload exercise
-
-Restart the backend after updating code/dependencies, refresh the browser, sign
-in as `hr`, and open **Manage documents** in the sidebar. Existing account
-passwords and existing document records are preserved.
-
-1. Choose `examples/remote_work_policy.txt`, title it "Remote working policy",
-   select **All employees**, then click **Upload and index document**.
-2. Return to questions, select that document, and ask how many remote working
-   days employees may request. The fictional policy says up to two per week.
-3. Upload `examples/alice_equipment_agreement.txt` as **One employee + HR**,
-   selecting `alice · EMP001`. Alice should see it; Bob should not.
-4. Try removing the newly uploaded example. Confirming removes it from the live
-   registry and employee search; cancelling keeps it unchanged.
-
-The file request uses multipart/form-data. The `file` part contains bytes and
-the `metadata` part contains JSON with title, category, version, visibility, and
-optional owner_id. The browser sets the multipart boundary automatically.
-
-Only TXT/text-based PDF files up to 20 MiB are accepted, with at most 1,000
-chunks per synchronous upload. The request body is also bounded when Content-Length
-is missing. File storage uses a server-generated ID under the ignored data/uploads
-directory; the original filename is display metadata. UTF-8, readable PDF pages,
-active owners and duplicate content/title/version/audience are checked.
-
-Chunks initially carry upload_status=staging. Both retrieval filters and the
-defensive metadata check reject staging records. After registration, a native
-Chroma metadata update publishes them without re-embedding. This uses the pinned
-LangChain adapter's _collection boundary, covered by real-Chroma integration tests.
-
-Catalog changes use a cross-process file lock and atomic file replacement. CLI
-indexing shares that lock. Chroma and the filesystem are still separate stores:
-rollback is best-effort, and a crash can leave staging records or recovery files
-needing reconciliation. Removal hides records before cleanup; a cleanup failure
-is reported as pending and logged by document ID, without document text.
-
-Uploads run synchronously in the backend worker thread. The UI reports progress
-and warns that a timed-out request may still complete. Durable jobs, quotas,
-malware scanning, resource-isolated extraction, atomic version activation, and
-automatic source-file retention/purging remain production work. The route buffers
-a bounded request in memory; production should enforce edge limits as well.
-
-A new version label creates a separate document. It does not automatically retire
-the previous version. Verify the replacement and remove the obsolete document.
-The browser integration checks use isolated accounts, real HTTP/auth/Chroma/file
-uploads and deterministic test embeddings/generation; no live employee files or
-Groq calls are used during those checks.
-
-
-## Project layout
+## Project structure
 
 ```text
-companymind-ai/
+CompanyMind-AI/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI application
-│   │   ├── core/             # Authentication, permissions, shared paths
-│   │   ├── rag/              # Read, chunk, embed, retrieve, generate
-│   │   └── documents/        # HR upload and document-management API
-│   ├── cli/                  # Administration commands and terminal chat
-│   ├── tests/                # Backend and permission tests
-│   ├── requirements.txt
-│   └── requirements-dev.txt
-├── frontend/                 # React and Vite
-├── docs/                     # Learning notes and project layout
-├── examples/                 # Fictional files for upload exercises
-├── data/                     # Source documents and fictional seed catalog
-├── runtime/                  # Local identities and live catalog (ignored)
-├── chroma_db/                # Persistent vectors (ignored)
-├── venv/                     # Local Python environment (ignored)
-├── .env                      # Local secrets (ignored)
-├── pytest.ini
-└── README.md
+│   │   ├── main.py                # FastAPI, auth/chat routes, application lifecycle
+│   │   ├── core/                  # Identity, access, conversations, publication dates
+│   │   ├── rag/                   # Ingestion, chunking, embeddings, retrieval, generation
+│   │   └── documents/             # Libraries, uploads, revision review and publication
+│   ├── cli/                       # Demo setup, indexing, user management, terminal chat
+│   ├── tests/                     # Backend unit and integration tests
+│   └── requirements.txt
+├── frontend/src/                  # React chat, document workspaces and HR review UI
+├── data/                          # Fictional seed documents and catalog
+├── examples/policy_revision/      # Old/new demo policies and test questions
+├── docs/                          # Guides, architecture notes and screenshots
+├── runtime/                       # Local identities, live catalog and reports (ignored)
+├── chroma_db/                     # Persistent local vectors (ignored)
+└── .env                           # Local provider credentials (ignored)
 ```
 
-Run Python commands from the repository root. Package modules are started with
-`python -m ...`; the dotted path corresponds to the folders containing the module.
-The old root-level Python entry points have moved. The API URLs and frontend
-proxy have not changed. Existing identities, documents, catalog, and vector data
-stay at the same storage paths; no reindex or account setup is required for this move.
+## Current boundaries and next steps
 
+The current version is intentionally a **single-company, single-process application**. It is useful for a portfolio demonstration and local experimentation, with these next steps remaining:
 
+| Area | Current boundary / next step |
+|---|---|
+| Retrieval quality | Add a labelled evaluation set, then measure retrieval recall, citation support, groundedness, abstention, latency and cost before introducing hybrid search or reranking. |
+| Background work | Reviews run one at a time in a process-local worker. Restarts interrupt active reviews. Add durable jobs and shared conversation storage before using multiple API workers. |
+| Policy governance | Comparison covers selected questions and retrieved passages. Scheduled revisions cannot yet be cancelled in the UI. Formal approvals, notifications and broader conflict analysis remain separate work. |
+| Document processing | No OCR for scanned PDFs. Complex tables require extraction review; production needs isolated processing, quotas and malware scanning. |
+| Storage consistency | Chroma and catalog/files are not a distributed transaction. Backups, reconciliation, durable storage and stronger atomic activation are production work. |
+| Identity and deployment | Add SSO/OIDC, HTTPS deployment, operational audit events, request limits, monitoring and a staging environment. No production-scale or compliance claim is made. |
 
-## Employee and HR document workspaces
+Use fictional or approved redacted documents for demos. Employee permissions are enforced at the API boundary; people with direct access to Chroma or server files are outside that boundary. Offer letters and agreements are explained from supplied text, not assessed for legal enforceability.
 
-Employees open My documents to browse shared policies and their assigned private
-documents, preview indexed passages, and start a question about one document.
-HR opens Document library for all classified documents, and Manage documents to
-upload for Everyone, One employee + HR, or HR only. Employee accounts cannot
-manage documents or access another employee's private or HR-only evidence.
+## Further reading
 
-See docs/ACCESS_WORKSPACES.md for the access matrix, code walkthrough and manual
-Alice/Bob/HR checks. examples/hr_only_review_guide.txt is an optional fictional
-file to upload with the HR-only audience. Existing records keep their audiences.
+- [Policy revision review and publication](docs/POLICY_REVISIONS.md)
+- [Employee and HR access workspaces](docs/ACCESS_WORKSPACES.md)
+- [Company knowledge and conversational RAG](docs/COMPANY_CHAT.md)
+- [Learning guide](docs/LEARNING.md)
+- [Code and folder guide](docs/PROJECT_STRUCTURE.md)
 
-The frontend defaults to a backend on port 8000. If another application uses that
-port, run Uvicorn on port 8001 and set COMPANYMIND_API_TARGET=http://127.0.0.1:8001
-in the frontend terminal before starting Vite. The access guide has exact commands.
+---
+
+Built by [Ayush Choudhar](https://github.com/AyushChoudhar5) as an applied GenAI engineering project: from document ingestion and permission-aware retrieval to a usable employee interface and an evidence-based HR review workflow.

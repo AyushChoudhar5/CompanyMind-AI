@@ -111,3 +111,13 @@ or package folders and are ignored by Git.
 
 
 The document library UI is frontend/src/DocumentLibrary.jsx. docs/ACCESS_WORKSPACES.md explains the access matrix.
+
+## Policy revisions
+
+- backend/app/core/publication.py: effective dates and current-version checks.
+- backend/app/documents/revisions.py: HR draft/review/publish workflow and background jobs.
+- backend/app/rag/impact.py: paired answer comparison and citation validation.
+- frontend/src/PolicyRevisions.jsx: HR review screen.
+- runtime/revision_reviews/: private saved reports; never commit them.
+- examples/policy_revision/: fictional old/new policies and test questions.
+- docs/POLICY_REVISIONS.md: walkthrough and implementation explanation.

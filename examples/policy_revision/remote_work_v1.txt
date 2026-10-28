@@ -1,0 +1,6 @@
+Fictional revision demo: remote work
+Version 1.0
+
+Employees may work remotely two days per week.
+The employee reporting manager must approve remote work.
+Remote work is available only after completing probation.

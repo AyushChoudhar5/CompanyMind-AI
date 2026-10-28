@@ -2,6 +2,7 @@
 import json
 from pathlib import Path, PureWindowsPath
 from typing import Literal
+from backend.app.core.publication import END_OF_TIME, metadata_for
 
 from langchain_core.documents import Document
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -22,12 +23,22 @@ class DocumentSpec(BaseModel):
     category: str = Field(min_length=1, max_length=50)
     version: str = Field(min_length=1, max_length=30)
     visibility: Literal["company", "employee", "hr"]
+    lifecycle: Literal["published", "draft", "archived"] = "published"
+    replaces_id: str | None = Field(default=None, max_length=100)
+    effective_from: int = Field(default=0, ge=0, le=END_OF_TIME)
+    effective_until: int = Field(default=END_OF_TIME, ge=0, le=END_OF_TIME)
+    created_by: str | None = None
+    created_at: int = 0
+    published_by: str | None = None
+    published_at: int | None = None
     owner_id: str | None = None
     source_name: str | None = Field(default=None, min_length=1, max_length=250)
     sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @model_validator(mode="after")
     def validate_owner(self):
+        if self.effective_until < self.effective_from:
+            raise ValueError("Policy dates are inconsistent.")
         if self.visibility == "employee" and not (self.owner_id and self.owner_id.strip()):
             raise ValueError("An employee document needs an explicit owner_id.")
         if self.visibility != "employee" and self.owner_id is not None:
@@ -95,6 +106,8 @@ def load_registered(spec: DocumentSpec, root: Path = DATA_DIR) -> list[Document]
         "document_id": spec.document_id, "source": spec.source_name or path.name, "title": spec.title,
         "category": spec.category, "version": spec.version, "visibility": spec.visibility,
     }
+    if spec.lifecycle != "published" or spec.replaces_id or spec.effective_from != 0 or spec.effective_until != END_OF_TIME:
+        metadata.update(metadata_for(spec))
     if spec.owner_id:
         metadata["owner_id"] = spec.owner_id
     if path.suffix.lower() == ".txt":
