@@ -4,7 +4,7 @@
 
 ### Company knowledge. Personal access. Answers with evidence.
 
-A full-stack employee knowledge assistant with permission-aware RAG, private document access, and an HR workflow that previews how policy revisions could change employee answers.
+CompanyMind AI helps employees find clear answers to workplace questions—from leave policies to their own employment documents. It shows where each answer comes from, respects who can access each document, and helps HR preview how policy changes could affect employee answers before publishing them.
 
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;labelColor=555555&amp;logo=python&amp;logoColor=white" />
