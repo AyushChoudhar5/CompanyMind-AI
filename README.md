@@ -6,7 +6,16 @@
 
 A full-stack employee knowledge assistant with permission-aware RAG, private document access, and an HR workflow that previews how policy revisions could change employee answers.
 
-**Python · FastAPI · React · LangChain · Chroma · Groq**
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;labelColor=555555&amp;logo=python&amp;logoColor=white" />
+  <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&amp;labelColor=555555&amp;logo=react&amp;logoColor=white" />
+  <img alt="API: FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688?style=flat-square&amp;labelColor=555555&amp;logo=fastapi&amp;logoColor=white" />
+  <img alt="AI: RAG" src="https://img.shields.io/badge/AI-RAG-8B5CF6?style=flat-square&amp;labelColor=555555" />
+  <img alt="Framework: LangChain" src="https://img.shields.io/badge/Framework-LangChain-1C3C3C?style=flat-square&amp;labelColor=555555&amp;logo=langchain&amp;logoColor=white" />
+  <img alt="Vector database: Chroma" src="https://img.shields.io/badge/Vector_DB-Chroma-F4B400?style=flat-square&amp;labelColor=555555" />
+  <img alt="LLM: Groq" src="https://img.shields.io/badge/LLM-Groq-F55036?style=flat-square&amp;labelColor=555555" />
+  <img alt="Database: SQLite" src="https://img.shields.io/badge/Database-SQLite-4169E1?style=flat-square&amp;labelColor=555555&amp;logo=sqlite&amp;logoColor=white" />
+</p>
 
 [Example flow](#from-sign-in-to-a-cited-answer) · [Features](#features) · [Policy impact review](#policy-change-impact-review) · [Architecture](#architecture) · [Run locally](#run-locally) · [Demo](#a-five-minute-demo) · [Engineering notes](#engineering-notes)
 
@@ -179,16 +188,6 @@ flowchart LR
 Scheduled activation uses `effective_from <= now < effective_until` during retrieval. It does not depend on a timer job firing at the right moment.
 
 ## Technology stack
-
-![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![API](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
-![RAG](https://img.shields.io/badge/RAG-LangChain-1C3C3C?logo=langchain&logoColor=white)
-![Vector database](https://img.shields.io/badge/Vector_DB-Chroma-F4B400)
-![LLM](https://img.shields.io/badge/LLM-Groq-F55036)
-![Embeddings](https://img.shields.io/badge/Embeddings-Hugging_Face-FFD21E?logo=huggingface&logoColor=white)
-![Database](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)
-![Frontend tooling](https://img.shields.io/badge/Build-Vite-646CFF?logo=vite&logoColor=white)
 
 | Layer | Technology |
 |---|---|
