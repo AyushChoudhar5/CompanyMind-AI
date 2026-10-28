@@ -8,7 +8,7 @@ A full-stack employee knowledge assistant with permission-aware RAG, private doc
 
 **Python · FastAPI · React · LangChain · Chroma · Groq**
 
-[Features](#features) · [Policy impact review](#policy-change-impact-review) · [Architecture](#architecture) · [Run locally](#run-locally) · [Demo](#a-five-minute-demo) · [Engineering notes](#engineering-notes)
+[Example flow](#from-sign-in-to-a-cited-answer) · [Features](#features) · [Policy impact review](#policy-change-impact-review) · [Architecture](#architecture) · [Run locally](#run-locally) · [Demo](#a-five-minute-demo) · [Engineering notes](#engineering-notes)
 
 </div>
 
@@ -25,6 +25,39 @@ The project is a **production-oriented portfolio prototype for a single company*
 ![CompanyMind employee knowledge workspace](docs/images/companymind-workspace.png)
 
 *The application uses a beige and muted-green interface with clean, bold typography. Screenshots use isolated fictional demo accounts and documents.*
+
+## From sign-in to a cited answer
+
+```mermaid
+flowchart LR
+    Account[Administrator creates account] --> Login[Employee signs in]
+    Login --> Scope[Choose permitted documents]
+    Scope --> Question[Ask a question]
+    Question --> Answer[Read the grounded answer]
+    Answer --> Citation[Open a citation and inspect its passage]
+```
+
+**1. Sign in → 2. Ask a question**
+
+| Sign in to CompanyMind | Alice selects the leave policy and asks a question |
+|---|---|
+| ![CompanyMind sign-in screen](docs/images/companymind-sign-in.png) | ![Alice preparing her leave question](docs/images/alice-ask-leave.png) |
+
+Accounts are created by a trusted administrator through the setup or user-management command. The current app has a **sign-in screen**, not public self-service registration. Alice's document selection contains only shared policies and her assigned private documents.
+
+**3. Read the answer and open its evidence**
+
+![Alice asking about leave allowances with answer citations and an expanded source passage](docs/images/alice-leave-citations.png)
+
+In this example Alice asks, **“How many leaves can I have? Answer in short bullet points.”** The fictional leave policy specifies:
+
+- **12 days of casual leave** per calendar year.
+- **10 days of sick leave** per calendar year.
+- **18 days of annual leave** per calendar year.
+
+The answer includes clickable citations. Selecting one opens the corresponding passage in **Sources & context**, where Alice can check `leave_policy.txt`, its version and the actual policy text. These are policy entitlements, not a calculation of Alice's remaining balance after leave already taken.
+
+*Captured from the running application with an isolated fictional Alice account, real MiniLM embeddings, Chroma retrieval and a live Groq response. The screenshots are not mockups; model wording may vary between runs.*
 
 ## Features
 
@@ -146,6 +179,16 @@ flowchart LR
 Scheduled activation uses `effective_from <= now < effective_until` during retrieval. It does not depend on a timer job firing at the right moment.
 
 ## Technology stack
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![API](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
+![RAG](https://img.shields.io/badge/RAG-LangChain-1C3C3C?logo=langchain&logoColor=white)
+![Vector database](https://img.shields.io/badge/Vector_DB-Chroma-F4B400)
+![LLM](https://img.shields.io/badge/LLM-Groq-F55036)
+![Embeddings](https://img.shields.io/badge/Embeddings-Hugging_Face-FFD21E?logo=huggingface&logoColor=white)
+![Database](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)
+![Frontend tooling](https://img.shields.io/badge/Build-Vite-646CFF?logo=vite&logoColor=white)
 
 | Layer | Technology |
 |---|---|
